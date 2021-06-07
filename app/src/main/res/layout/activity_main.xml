@@ -22,15 +22,21 @@
             <Button
                 android:id="@+id/b1"
                 android:layout_width="120dp"
-                android:layout_height="120dp"/>
+                android:layout_height="120dp"
+                android:background="@drawable/on"
+                android:layout_margin="2dp"/>
             <Button
                 android:id="@+id/b2"
                 android:layout_width="120dp"
-                android:layout_height="120dp"/>
+                android:layout_height="120dp"
+                android:background="@drawable/tw"
+                android:layout_margin="2dp"/>
             <Button
                 android:id="@+id/b3"
                 android:layout_width="120dp"
-                android:layout_height="120dp"/>
+                android:layout_height="120dp"
+                android:background="@drawable/thr"
+                android:layout_margin="2dp"/>
         </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
@@ -40,15 +46,21 @@
             <Button
                 android:id="@+id/b4"
                 android:layout_width="120dp"
-                android:layout_height="120dp"/>
+                android:layout_height="120dp"
+                android:background="@drawable/fo"
+                android:layout_margin="2dp"/>
             <Button
                 android:id="@+id/b5"
                 android:layout_width="120dp"
-                android:layout_height="120dp"/>
+                android:layout_height="120dp"
+                android:layout_margin="2dp"
+                android:background="@drawable/fi"/>
             <Button
                 android:id="@+id/b6"
                 android:layout_width="120dp"
-                android:layout_height="120dp"/>
+                android:layout_height="120dp"
+                android:layout_margin="2dp"
+                android:background="@drawable/si"/>
         </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
@@ -58,15 +70,20 @@
             <Button
                 android:id="@+id/b7"
                 android:layout_width="120dp"
-                android:layout_height="120dp"/>
+                android:layout_height="120dp"
+                android:layout_margin="2dp"
+                android:background="@drawable/se"/>
             <Button
                 android:id="@+id/b8"
                 android:layout_width="120dp"
-                android:layout_height="120dp"/>
+                android:layout_height="120dp"
+                android:layout_margin="2dp"
+                android:background="@drawable/ei"/>
             <Button
                 android:id="@+id/b9"
                 android:layout_width="120dp"
-                android:layout_height="120dp"/>
+                android:layout_height="120dp"
+                android:background="@drawable/ni"/>
         </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"

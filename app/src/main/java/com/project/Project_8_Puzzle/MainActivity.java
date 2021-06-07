@@ -1,30 +1,45 @@
 package com.project.Project_8_Puzzle;
 
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
+import com.project.Project_8_Puzzle.control_astar.ControlAStar;
+import com.project.Project_8_Puzzle.control_astar.astar;
+import com.project.Project_8_Puzzle.control_bfs.bfs;
+
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Random;
 import java.util.Stack;
+
+import static com.project.Project_8_Puzzle.control_astar.ControlAStar.downAstar;
+import static com.project.Project_8_Puzzle.control_astar.ControlAStar.leftAstar;
+import static com.project.Project_8_Puzzle.control_astar.ControlAStar.rightAstar;
+import static com.project.Project_8_Puzzle.control_astar.ControlAStar.upAstar;
+import static com.project.Project_8_Puzzle.control_bdr.ControlBDR.downBDR;
+import static com.project.Project_8_Puzzle.control_bdr.ControlBDR.leftBDR;
+import static com.project.Project_8_Puzzle.control_bdr.ControlBDR.rightBDR;
+import static com.project.Project_8_Puzzle.control_bdr.ControlBDR.upBDR;
+import static com.project.Project_8_Puzzle.control_bfs.ControlBFS.down;
+import static com.project.Project_8_Puzzle.control_bfs.ControlBFS.left;
+import static com.project.Project_8_Puzzle.control_bfs.ControlBFS.right;
+import static com.project.Project_8_Puzzle.control_bfs.ControlBFS.up;
+import static com.project.Project_8_Puzzle.util.Util.findCost;
 
 @RequiresApi(api = Build.VERSION_CODES.N)
 public class MainActivity extends AppCompatActivity {
@@ -33,26 +48,19 @@ public class MainActivity extends AppCompatActivity {
     TextView langkah, langkahke;
     Button btnNext,btnPrev ;
 
-    ArrayList<ButtonPuzzle> listPuzzle;//list Button Puzzle
-    Random r =new Random();//declare random
-    int stateNow=9;//state sekarang yang kosong = 9 karena angka random 9 yang mewakili kosong
+    ArrayList<ButtonPuzzle> listPuzzle;
+    int stateNow=9;
     int jalan=0;
     int step=0;
+
     //winstate
     String WinState="123456789";
-    ArrayList<String> stateJawaban=new ArrayList<>(); // tampung jawaban
-    int stateJawabanNow=-1; // tampung index jawaban yang sekarang supaya bisa di next / prev
-    //
-
-    // DFS
-    Stack<String> stackDFSOpen= new Stack<>();
-    Stack<String> stackDFSClose= new Stack<>();
-    //
+    ArrayList<String> stateJawaban=new ArrayList<>();
+    int stateJawabanNow=-1;
 
     // BFS
-//    Queue<String> queueBFSOpen = new LinkedList<>();
     Queue<bfs> queueBFSOpen = new LinkedList<>();
-    Stack<String> stackBFSClose= new Stack<>();
+    Stack<String> stackBFSClose = new Stack<>();
     ArrayList<bfs> lBfs = new ArrayList<>();
     //
 
@@ -63,22 +71,6 @@ public class MainActivity extends AppCompatActivity {
     Queue<bfs> queueBDR2Open = new LinkedList<>();
     Stack<String> stackBDR2Close= new Stack<>();
     Stack<bfs> stackBDR2Close2= new Stack<>();
-    //
-
-    Comparator<astar> compAsar = new Comparator<astar>() {
-        @Override
-        public int compare(astar s1, astar s2) {
-            int a = s1.cost+s1.depth;
-            int b = s2.cost+s2.depth;
-            if(a<b){
-                return -1;
-            }else if(a>b){
-                return 1;
-            }else{
-                return 0;
-            }
-        }
-    };
 
     PriorityQueue<astar> pkAsterOpen = new PriorityQueue<astar>(99999,new CompareAstar());
     Stack<String> stackAstarClose= new Stack<>();
@@ -110,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         btnNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(stateJawabanNow<stateJawaban.size()-1){
+                if(stateJawabanNow < stateJawaban.size()-1){
                     stateJawabanNow++;
                     step++;
                     langkahke.setText("Langkah ke: "+step);
@@ -127,9 +119,39 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < listPuzzle.size(); i++) {
             String potong =text.substring(i,i+1);
             listPuzzle.get(i).getBtn().setText(potong);
+            setImage(listPuzzle.get(i).getBtn(), Integer.parseInt(potong));
             if(potong.equals("9")){
                 listPuzzle.get(i).getBtn().setText("");
             }
+        }
+    }
+    void setImage(Button btn, int num){
+        if(num == 1){
+            btn.setBackground(ContextCompat.getDrawable(this, R.drawable.on));
+        }
+        else if(num == 2){
+            btn.setBackground(ContextCompat.getDrawable(this, R.drawable.tw));
+        }
+        else if(num == 3){
+            btn.setBackground(ContextCompat.getDrawable(this, R.drawable.thr));
+        }
+        else if(num == 4){
+            btn.setBackground(ContextCompat.getDrawable(this, R.drawable.fo));
+        }
+        else if(num == 5){
+            btn.setBackground(ContextCompat.getDrawable(this, R.drawable.fi));
+        }
+        else if(num == 6){
+            btn.setBackground(ContextCompat.getDrawable(this, R.drawable.si));
+        }
+        else if(num == 7){
+            btn.setBackground(ContextCompat.getDrawable(this, R.drawable.se));
+        }
+        else if(num == 8){
+            btn.setBackground(ContextCompat.getDrawable(this, R.drawable.ei));
+        }
+        else{
+            btn.setBackground(ContextCompat.getDrawable(this, R.drawable.ni));
         }
     }
 
@@ -157,8 +179,6 @@ public class MainActivity extends AppCompatActivity {
                     else if(stateNow-1==lokasi&&(stateNow)%3!=0){//swap kiri
                         swap(btn,listPuzzle.get(stateNow).getBtn());
                     }
-
-
 
                 }
             });
@@ -214,12 +234,6 @@ public class MainActivity extends AppCompatActivity {
 
             stateNow=8;
             jalan++;
-            if(jalan<10){
-                System.out.println("1");
-                cetak(open1.now);
-                System.out.println("2");
-                cetak(open2.now);
-            }
 
             if(stackBDR1Close.contains(open2.now)||stackBDR2Close.contains(open1.now)){
                 proses.setText("Proses : Ketemu Bi-Bfs");
@@ -304,75 +318,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public String upBDR(String s, int p,Queue<bfs> open, Stack<String> close) {
-        String str = s;
-        if (!(p < 3)) {
-            char a = str.charAt(p - 3);
-            String newS = str.substring(0, p) + a + str.substring(p + 1);
-            str = newS.substring(0, (p - 3)) + '9' + newS.substring(p - 2);
-        }
-        // Eliminates child of X if its on OPEN or CLOSED
-        if (!open.contains(str)  && !close.contains(str))
-            return str;
-        else
-            return "-1";
-    }
-
-    public String downBDR(String s, int p,Queue<bfs> open, Stack<String> close) {
-        String str = s;
-        if (!(p > 5)) {
-            char a = str.charAt(p + 3);
-            String newS = str.substring(0, p) + a + str.substring(p + 1);
-            str = newS.substring(0, (p + 3)) + '9' + newS.substring(p + 4);
-        }
-
-        // Eliminates child of X if its on OPEN or CLOSED
-        if (!open.contains(str) && !close.contains(str))
-            return str;
-        else
-            return "-1";
-    }
-    public String leftBDR(String s, int p,Queue<bfs> open, Stack<String> close) {
-        String str = s;
-        if (p%3!=0) {
-            char a = str.charAt(p - 1);
-            String newS = str.substring(0, p) + a + str.substring(p + 1);
-            str = newS.substring(0, (p - 1)) + '9' + newS.substring(p);
-        }
-        // Eliminates child of X if its on OPEN or CLOSED
-        if (!open.contains(str) && !close.contains(str))
-            return str;
-        else
-            return "-1";
-    }
-    public String rightBDR(String s, int p,Queue<bfs> open, Stack<String> close) {
-        String str = s;
-        if (p != 2 && p != 5 && p != 8) {
-            char a = str.charAt(p + 1);
-            String newS = str.substring(0, p) + a + str.substring(p + 1);
-            str = newS.substring(0, (p + 1)) + '9' + newS.substring(p + 2);
-        }
-        // Eliminates child of X if its on OPEN or CLOSED
-        if (!open.contains(str) && !close.contains(str))
-            return str;
-        else
-            return "-1";
-    }
-
-
-    public int findCost(String now){
-        int cost=0;
-        for (int i = 0; i < 9; i++) {
-            int a1=Integer.parseInt(now.substring(i,i+1));
-            int a2=Integer.parseInt(WinState.substring(i,i+1));
-            System.out.println();
-            if(a1!=a2){
-                cost++;
-            }
-        }
-        return cost;
-    }
-
     public void astar_onclick(View view) {
         proses.setText("Proses : Proses Astar");
         pkAsterOpen.clear();;
@@ -417,23 +362,23 @@ public class MainActivity extends AppCompatActivity {
             }else{
                 String temp="";
                 astar parentAdd= (astar) clone(parent);
-                temp = downAstar(x, pos);
+                temp = downAstar(pkAsterOpen, stackAstarClose, x, pos);
                 if (!(temp.equals("-1"))){
-                    pkAsterOpen.add(new astar(temp,parentAdd,findCost(temp),parentAdd.getDepth()));
+                    pkAsterOpen.add(new astar(temp,parentAdd,findCost(WinState, temp),parentAdd.getDepth()));
                 }
-                temp = upAstar(x, pos);
+                temp = upAstar(pkAsterOpen, stackAstarClose, x, pos);
                 if (!(temp.equals("-1"))){
-                    pkAsterOpen.add(new astar(temp,parentAdd,findCost(temp),parentAdd.getDepth()));
-                }
-
-                temp = leftAstar(x, pos);
-                if (!(temp.equals("-1"))){
-                    pkAsterOpen.add(new astar(temp,parentAdd,findCost(temp),parentAdd.getDepth()));
+                    pkAsterOpen.add(new astar(temp,parentAdd,findCost(WinState, temp),parentAdd.getDepth()));
                 }
 
-                temp = rightAstar(x, pos);
+                temp = leftAstar(pkAsterOpen, stackAstarClose, x, pos);
                 if (!(temp.equals("-1"))){
-                    pkAsterOpen.add(new astar(temp,parentAdd,findCost(temp),parentAdd.getDepth()));
+                    pkAsterOpen.add(new astar(temp,parentAdd,findCost(WinState, temp),parentAdd.getDepth()));
+                }
+
+                temp = rightAstar(pkAsterOpen, stackAstarClose, x, pos);
+                if (!(temp.equals("-1"))){
+                    pkAsterOpen.add(new astar(temp,parentAdd,findCost(WinState, temp),parentAdd.getDepth()));
                 }
             }
 
@@ -441,71 +386,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public String upAstar(String s, int p) {
-        String str = s;
-        if (!(p < 3)) {
-            char a = str.charAt(p - 3);
-            String newS = str.substring(0, p) + a + str.substring(p + 1);
-            str = newS.substring(0, (p - 3)) + '9' + newS.substring(p - 2);
-        }
-        // Eliminates child of X if its on OPEN or CLOSED
-        if (!pkAsterOpen.contains(str)  && !stackAstarClose.contains(str))
-            return str;
-        else
-            return "-1";
-    }
 
-    /*
-     * MOVEMENT DOWN
-     */
-    public String downAstar(String s, int p) {
-        String str = s;
-        if (!(p > 5)) {
-            char a = str.charAt(p + 3);
-            String newS = str.substring(0, p) + a + str.substring(p + 1);
-            str = newS.substring(0, (p + 3)) + '9' + newS.substring(p + 4);
-        }
-
-        // Eliminates child of X if its on OPEN or CLOSED
-        if (!pkAsterOpen.contains(str) && !stackAstarClose.contains(str))
-            return str;
-        else
-            return "-1";
-    }
-
-    /*
-     * MOVEMENT LEFT
-     */
-    public String leftAstar(String s, int p) {
-        String str = s;
-        if (p%3!=0) {
-            char a = str.charAt(p - 1);
-            String newS = str.substring(0, p) + a + str.substring(p + 1);
-            str = newS.substring(0, (p - 1)) + '9' + newS.substring(p);
-        }
-        // Eliminates child of X if its on OPEN or CLOSED
-        if (!pkAsterOpen.contains(str) && !stackAstarClose.contains(str))
-            return str;
-        else
-            return "-1";
-    }
-
-    /*
-     * MOVEMENT RIGHT
-     */
-    public String rightAstar(String s, int p) {
-        String str = s;
-        if (p != 2 && p != 5 && p != 8) {
-            char a = str.charAt(p + 1);
-            String newS = str.substring(0, p) + a + str.substring(p + 1);
-            str = newS.substring(0, (p + 1)) + '9' + newS.substring(p + 2);
-        }
-        // Eliminates child of X if its on OPEN or CLOSED
-        if (!pkAsterOpen.contains(str) && !stackAstarClose.contains(str))
-            return str;
-        else
-            return "-1";
-    }
 
     public void bfs_onclick(View view) {
         proses.setText("Proses : Bfs Bdr");
@@ -540,26 +421,7 @@ public class MainActivity extends AppCompatActivity {
 
                 proses.setText("Proses : Ketemu Bdr");
                 stateJawabanNow=0;
-//                int idx=-1;
-//                for (int i = 0; i < lBfs.size()-1; i++) {
-//                    if(lBfs.get(i).now.equals(x)){
-//                        idx=i;
-//                        break;
-//                    }
-//                }
-
-//                bfs lastBfs=lBfs.get(idx);
                 bfs lastBfs=open;
-
-//                while(!lastBfs.parent.equals("")){
-//                    for (int i = 0; i < lBfs.size()-1; i++) {
-//                        if(lastBfs.parent.equals(lBfs.get(i).now) ){
-//                            stateJawaban.add(lastBfs.now);
-//                            lastBfs=lBfs.get(i);
-//                            i=0;
-//                        }
-//                    }
-//                }
                 ArrayList<bfs> jawaban = new ArrayList<>();
                 while(lastBfs.parent!=null){
                     jawaban.add(lastBfs);
@@ -580,30 +442,26 @@ public class MainActivity extends AppCompatActivity {
                 win=true;
             }else{
                 String temp="";
-                temp = down(x, pos);
+                temp = down(queueBFSOpen, stackBFSClose, x, pos);
                 bfs parentAdd= (bfs) clone(parents);
                 if (!(temp.equals("-1"))){
-//                    queueBFSOpen.add(temp);
                     queueBFSOpen.add(new bfs(temp,parentAdd));
                     lBfs.add(new bfs(temp,parentAdd));
                 }
-                temp = up(x, pos);
+                temp = up(queueBFSOpen, stackBFSClose, x, pos);
                 if (!(temp.equals("-1"))){
-//                    queueBFSOpen.add(temp);
-                    queueBFSOpen.add(new bfs(temp,parentAdd));
-                    lBfs.add(new bfs(temp,parentAdd));
-                }
-
-                temp = left(x, pos);
-                if (!(temp.equals("-1"))){
-//                    queueBFSOpen.add(temp);
                     queueBFSOpen.add(new bfs(temp,parentAdd));
                     lBfs.add(new bfs(temp,parentAdd));
                 }
 
-                temp = right(x, pos);
+                temp = left(queueBFSOpen, stackBFSClose, x, pos);
                 if (!(temp.equals("-1"))){
-//                    queueBFSOpen.add(temp);
+                    queueBFSOpen.add(new bfs(temp,parentAdd));
+                    lBfs.add(new bfs(temp,parentAdd));
+                }
+
+                temp = right(queueBFSOpen, stackBFSClose, x, pos);
+                if (!(temp.equals("-1"))){
                     queueBFSOpen.add(new bfs(temp,parentAdd));
                     lBfs.add(new bfs(temp,parentAdd));
                 }
@@ -617,93 +475,15 @@ public class MainActivity extends AppCompatActivity {
         return parents;
     }
 
-    public void cetak(String s){
-        String x =s;
-        Log.i(TAG, "dfs_onclick: Close : "+x);
-        Log.i(TAG, "dfs_onclick: State 1 = "+x.substring(0,3));
-        Log.i(TAG, "dfs_onclick: State 2 = "+x.substring(3,6));
-        Log.i(TAG, "dfs_onclick: State 3 = "+x.substring(6,9));
-    }
-
-    /*
-     * MOVEMENT UP
-     */
-    public String up(String s, int p) {
-        String str = s;
-        if (!(p < 3)) {
-            char a = str.charAt(p - 3);
-            String newS = str.substring(0, p) + a + str.substring(p + 1);
-            str = newS.substring(0, (p - 3)) + '9' + newS.substring(p - 2);
-        }
-        // Eliminates child of X if its on OPEN or CLOSED
-        if (!queueBFSOpen.contains(str)  && !stackBFSClose.contains(str))
-            return str;
-        else
-            return "-1";
-    }
-
-    /*
-     * MOVEMENT DOWN
-     */
-    public String down(String s, int p) {
-        String str = s;
-        if (!(p > 5)) {
-            char a = str.charAt(p + 3);
-            String newS = str.substring(0, p) + a + str.substring(p + 1);
-            str = newS.substring(0, (p + 3)) + '9' + newS.substring(p + 4);
-        }
-
-        // Eliminates child of X if its on OPEN or CLOSED
-        if (!queueBFSOpen.contains(str) && !stackBFSClose.contains(str))
-            return str;
-        else
-            return "-1";
-    }
-
-    /*
-     * MOVEMENT LEFT
-     */
-    public String left(String s, int p) {
-        String str = s;
-        if (p%3!=0) {
-            char a = str.charAt(p - 1);
-            String newS = str.substring(0, p) + a + str.substring(p + 1);
-            str = newS.substring(0, (p - 1)) + '9' + newS.substring(p);
-        }
-        // Eliminates child of X if its on OPEN or CLOSED
-        if (!queueBFSOpen.contains(str) && !stackBFSClose.contains(str))
-            return str;
-        else
-            return "-1";
-    }
-
-    /*
-     * MOVEMENT RIGHT
-     */
-    public String right(String s, int p) {
-        String str = s;
-        if (p != 2 && p != 5 && p != 8) {
-            char a = str.charAt(p + 1);
-            String newS = str.substring(0, p) + a + str.substring(p + 1);
-            str = newS.substring(0, (p + 1)) + '9' + newS.substring(p + 2);
-        }
-        // Eliminates child of X if its on OPEN or CLOSED
-        if (!queueBFSOpen.contains(str) && !stackBFSClose.contains(str))
-            return str;
-        else
-            return "-1";
-    }
-
-
     public String getState(){
-        String stateNow="";
+        StringBuilder stateNow= new StringBuilder();
         for (ButtonPuzzle btn:listPuzzle) {
-            stateNow=stateNow+btn.getBtn().getText().toString();
-            if(btn.getBtn().getText().toString()==""){
-                stateNow=stateNow+9;
+            stateNow.append(btn.getBtn().getText().toString());
+            if(btn.getBtn().getText().toString().equals("")){
+                stateNow.append(9);
             }
         }
-        return stateNow;
+        return stateNow.toString();
     }
 
     public void cheat_onclick(View view) {
@@ -723,36 +503,17 @@ public class MainActivity extends AppCompatActivity {
         stateNow = 4;
     }
 
-    public void swap(Button b1,Button b2){// swap antara kosong dan yang di tekan
+    public void swap(Button b1,Button b2){
         String tmp=b2.getText().toString();
+        Drawable drawable = b2.getBackground();
         b2.setText(b1.getText());
+        b2.setBackground(b1.getBackground());
         b1.setText(tmp);
-        stateNow=(int)b1.getTag();// isi state kosong yang baru
+        b1.setBackground(drawable);
+        stateNow=(int)b1.getTag();
     }
 
     public void random(){
-        //Random angka yang ada di button
-
-//        String tmpRandom="";//tmpRandom untuk check apakah angka random sudah ada atau belum
-//        Integer random=-1;
-//        Boolean isEmpty=false;
-//        for (int i = 0; i< listPuzzle.size();i++) {
-//            do{
-//                random = r.nextInt(9)+1;
-////                Log.i("myApp", "random: "+random);
-////                Log.i("myApp", "Boolean : "+tmpRandom.matches("(.*)"+random.toString()+"(.*)"));
-////                Log.i("myApp", "Boolean : "+tmpRandom);
-//            }while(tmpRandom.matches("(.*)"+random.toString()+"(.*)"));
-//
-//            tmpRandom=tmpRandom+random.toString();
-//            listPuzzle.get(i).getBtn().setText(random.toString());
-//
-//            if(random==stateNow&&!isEmpty){// untuk yang kosong
-//                stateNow=i;
-//                isEmpty=true;
-//                listPuzzle.get(i).getBtn().setText("");
-//            }
-//        }
         for (int i = 0; i < listPuzzle.size()-1; i++) {
             Button btn = listPuzzle.get(i).getBtn();
             btn.setText((i+1)+"");
@@ -778,24 +539,6 @@ public class MainActivity extends AppCompatActivity {
         list.add(new ButtonPuzzle((Button)findViewById(R.id.b7),6,0));
         list.add(new ButtonPuzzle((Button)findViewById(R.id.b8),7,0));
         list.add(new ButtonPuzzle((Button)findViewById(R.id.b9),8,0));
-    }
-    
-    public boolean checkWin(){
-
-        ArrayList<String> goalState = new ArrayList<>();
-        for (int i = 1; i < 10; i++) {
-            goalState.add(i+"");
-        }
-
-        // -1 karena tidak cek tombol kosong terakhir
-        for (int i = 0; i < listPuzzle.size()-1; i++) {
-            Button btn = listPuzzle.get(i).getBtn();
-            if(!btn.getText().toString().equals(goalState.get(i))){
-                return false;
-            }
-        }
-
-        return true;
     }
 
     class CompareAstar implements Comparator<astar> {
